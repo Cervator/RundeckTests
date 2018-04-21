@@ -11,8 +11,9 @@ Initially IntelliJ has been used, instructions may vary slightly based on IDE.
 * Define environment variables with Sauce credentials
   * `SAUCE_USER` - username for sauce.io account
   * `SAUCE_ACCESS_KEY` - access key from "My Account" section
+* Run tests with the Maven test target
 
-Current testing URL is hard coded for proof of concept, set in `SampleRundeckTest.SITE_TO_TEST`
+Current testing target URL is hard coded for proof of concept, set in `SampleRundeckTest.SITE_TO_TEST`
 
 ## Example
 
@@ -24,9 +25,9 @@ Sample execution on the Sauce side accessible [here](https://saucelabs.com/beta/
 
 ## Adding more tests
 
-At the moment simply see the `SampleRundeckTest` class and mimic the existing `@Test` methods
+At the moment simply see the `SampleRundeckTest` class and mimic the existing `@Test` methods. All usual Selenium type mechanics are available.
 
-More advanced CI-based tests are possible, with it would come more structure of test classes
+More advanced CI-based tests are possible, with it would come more structure of test classes.
 
 ## Future improvements
 
