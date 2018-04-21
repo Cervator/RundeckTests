@@ -1,0 +1,7 @@
+# Ignore IntelliJ
+/out/
+.idea
+*.iml
+*.ipr
+*.iws
+/projectFilesBackup*
