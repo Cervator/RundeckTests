@@ -9,6 +9,8 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.remote.CapabilityType;
 import org.openqa.selenium.remote.DesiredCapabilities;
@@ -18,11 +20,14 @@ import java.net.URL;
 import java.util.LinkedList;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 @RunWith(ConcurrentParameterized.class)
 public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
 
-    /** Constant for base URL to test */
+    /**
+     * Constant for base URL to test
+     */
     public static final String SITE_TO_TEST = "http://35.194.88.217";
 
     /**
@@ -65,6 +70,7 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
      * Constructs a new instance of the test.  The constructor requires three string parameters, which represent the operating
      * system, version and browser to be used when launching a Sauce VM.  The order of the parameters should be the same
      * as that of the elements within the {@link #browsersStrings()} method.
+     *
      * @param os
      * @param version
      * @param browser
@@ -111,17 +117,6 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
     }
 
     /**
-     * Runs a simple test verifying the title of the amazon.com homepage.
-     * @throws Exception
-     */
-    @Test
-    public void checkLoginPage() throws Exception {
-        driver.get(SITE_TO_TEST);
-        System.out.println("Site under test via '" + browser + " " + version + "' on '" + os + "' - page title: '" + driver.getTitle() + "'");
-        assertEquals("Rundeck - Login", driver.getTitle());
-    }
-
-    /**
      * Closes the {@link WebDriver} session.
      * @throws Exception
      */
@@ -134,8 +129,61 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
      * TODO: Last time I used this the `@Override` didn't get marked as an error in IntelliJ, what changed?
      * @return the value of the Sauce Job id.
      */
-    @Override
+    //@Override
     public String getSessionId() {
         return sessionId;
+    }
+
+    private boolean isElementPresent(By by) {
+        try {
+            driver.findElement(by);
+            return true;
+        } catch (NoSuchElementException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Runs a simple test verifying the title of the Rundeck login page
+     *
+     * @throws Exception
+     */
+    @Test
+    public void checkLoginPage() throws Exception {
+        driver.get(SITE_TO_TEST);
+        System.out.println("Site under test via '" + browser + " " + version + "' on '" + os + "' - page title: '" + driver.getTitle() + "'");
+        assertEquals("Rundeck - Login", driver.getTitle());
+    }
+
+
+    /**
+     * Attempts an actual login into Rundeck then validates a link
+     * @throws Exception
+     */
+    @Test
+    public void validateLogin() throws Exception {
+        int timeout = 10;
+
+        driver.get(SITE_TO_TEST);
+
+        for (int second = 0; ; second++) {
+            if (second >= timeout) fail("timeout");
+            try {
+                if (isElementPresent(By.name("j_username"))) {
+                    break;
+                }
+            } catch (Exception e) {
+            }
+            Thread.sleep(1000);
+        }
+
+        driver.findElement(By.name("j_username")).clear();
+        driver.findElement(By.name("j_username")).sendKeys("admin");
+        driver.findElement(By.name("j_password")).clear();
+        driver.findElement(By.name("j_password")).sendKeys("admin");
+        driver.findElement(By.className("btn-primary")).click();
+
+        Thread.sleep(1000);
+        assertEquals("Documentation »", driver.findElement(By.linkText("Documentation »")).getText());
     }
 }
