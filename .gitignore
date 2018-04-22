@@ -6,5 +6,7 @@
 *.iws
 /projectFilesBackup*
 
-# Ignore Gradle
+# Ignore Maven & Gradle
+target
 .gradle
+build
