@@ -6,18 +6,20 @@ This is a quick demo repo showcasing [sauce.io](https://saucelabs.com) tests wor
 
 Initially IntelliJ has been used, instructions may vary slightly based on IDE.
 
-* Import project via Maven.
+* Import project via Gradle or Maven
 * Pick a Java 8 JDK if needed
 * Define environment variables with Sauce credentials
   * `SAUCE_USER` - username for sauce.io account
   * `SAUCE_ACCESS_KEY` - access key from "My Account" section
-* Run tests with the Maven test target
+* Run tests with `gradlew test` or Maven's `test` target
 
 Current testing target URL is hard coded for proof of concept, set in `SampleRundeckTest.SITE_TO_TEST`
 
 ## Example
 
 The initial tests are run by a Maven style job in the associated Jenkins X instance: http://jenkins.jx.35.186.180.178.nip.io/job/SimpleMavenRundeckTest/ (login required)
+
+A Gradle variant is available at http://jenkins.jx.35.186.180.178.nip.io/job/SimpleGradleRundeckTest/
 
 Target Rundeck environment is living in the same Kubernetes cluster as the one hosting Jenkins X: http://35.194.88.217
 

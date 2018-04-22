@@ -1,0 +1,14 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+    maven {
+        url 'https://repository-saucelabs.forge.cloudbees.com/release'
+    }
+}
+
+dependencies {
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '2.53.1'
+    testCompile group: 'com.saucelabs', name: 'sauce_junit', version: '2.1.23'
+}
