@@ -22,48 +22,37 @@ import java.util.LinkedList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+/**
+ * Contains some sample tests for Rundeck meant to run on Sauce.io
+ */
 @RunWith(ConcurrentParameterized.class)
 public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
 
-    /**
-     * Constant for base URL to test
-     */
+    /** Constant for base URL to test */
     public static final String SITE_TO_TEST = "http://35.194.88.217";
 
-    /**
-     * Constructs a {@link SauceOnDemandAuthentication} instance using the supplied user name/access key.  To use the authentication
-     * supplied by environment variables or from an external file, use the no-arg {@link SauceOnDemandAuthentication} constructor.
-     */
+    /** Constructs a {@link SauceOnDemandAuthentication} instance using the supplied user name/access key. */
     public SauceOnDemandAuthentication authentication = new SauceOnDemandAuthentication(
             System.getenv("SAUCE_USER"), // Username set via environment var for flexibility
             System.getenv("SAUCE_ACCESS_KEY")); // Access key set via environment var since secret
 
-    /**
-     * JUnit Rule which will mark the Sauce Job as passed/failed when the test succeeds or fails.
-     */
+    /** JUnit Rule which will mark the Sauce Job as passed/failed when the test succeeds or fails. */
     @Rule
     public SauceOnDemandTestWatcher resultReportingTestWatcher = new SauceOnDemandTestWatcher(this, authentication);
 
-    /**
-     * Represents the browser to be used as part of the test run.
-     */
+    /** Represents the browser to be used as part of the test run. */
     private String browser;
-    /**
-     * Represents the operating system to be used as part of the test run.
-     */
+
+    /** Represents the operating system to be used as part of the test run. */
     private String os;
-    /**
-     * Represents the version of the browser to be used as part of the test run.
-     */
+
+    /** Represents the version of the browser to be used as part of the test run. */
     private String version;
-    /**
-     * Instance variable which contains the Sauce Job Id.
-     */
+
+    /** Instance variable which contains the Sauce Job Id. */
     private String sessionId;
 
-    /**
-     * The {@link WebDriver} instance which is used to perform browser interactions with.
-     */
+    /** The {@link WebDriver} instance which is used to perform browser interactions with. */
     private WebDriver driver;
 
     /**
@@ -71,9 +60,9 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
      * system, version and browser to be used when launching a Sauce VM.  The order of the parameters should be the same
      * as that of the elements within the {@link #browsersStrings()} method.
      *
-     * @param os
-     * @param version
-     * @param browser
+     * @param os the target operating system
+     * @param version the version of the browser
+     * @param browser the target browser
      */
     public SampleRundeckTest(String os, String version, String browser) {
         super();
@@ -83,14 +72,17 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
     }
 
     /**
-     * @return a LinkedList containing String arrays representing the browser combinations the test should be run against. The values
-     * in the String array are used as part of the invocation of the test constructor
+     * Defines target browsers. The values in the String array are used as part of the invocation of the test constructor.
+     *
+     * @return a LinkedList containing String arrays representing the browser combinations the test should be run against.
      */
     @ConcurrentParameterized.Parameters
     public static LinkedList browsersStrings() {
-        LinkedList browsers = new LinkedList();
+        LinkedList<String[]> browsers = new LinkedList<>();
         browsers.add(new String[]{"Windows 10", "11", "internet explorer"});
         browsers.add(new String[]{"macOS 10.13", "11.0", "safari"});
+        browsers.add(new String[]{"Linux", "45.0", "firefox"});
+
         return browsers;
     }
 
@@ -118,18 +110,14 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
 
     /**
      * Closes the {@link WebDriver} session.
-     * @throws Exception
+     * @throws Exception in case of any error
      */
     @After
     public void tearDown() throws Exception {
         driver.quit();
     }
 
-    /**
-     * TODO: Last time I used this the `@Override` didn't get marked as an error in IntelliJ, what changed?
-     * @return the value of the Sauce Job id.
-     */
-    //@Override
+    @Override
     public String getSessionId() {
         return sessionId;
     }
@@ -143,10 +131,31 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
         }
     }
 
+    private void waitForElement(By elementToFind) {
+        waitForElement(elementToFind, 10);
+    }
+
+    private void waitForElement(By elementToFind, int timeout) {
+        for (int second = 0; second <= timeout; second++) {
+            try {
+                if (isElementPresent(elementToFind)) {
+                    return;
+                }
+                System.out.println("Sleeping a second (" + second + "/" + timeout + ") while waiting for element: " + elementToFind);
+                Thread.sleep(1000);
+            } catch (Exception e) {
+                System.err.println("Exception thrown waiting for element By " + elementToFind + ": " + e);
+                fail("Exception while waiting for element");
+            }
+        }
+        System.out.println("Timed out waiting for element: " + elementToFind);
+        fail("Timeout after " + timeout + " seconds");
+    }
+
     /**
-     * Runs a simple test verifying the title of the Rundeck login page
+     * Runs a simple test verifying the title of the Rundeck login page.
      *
-     * @throws Exception
+     * @throws Exception in case of any error
      */
     @Test
     public void checkLoginPage() throws Exception {
@@ -155,35 +164,32 @@ public class SampleRundeckTest implements SauceOnDemandSessionIdProvider {
         assertEquals("Rundeck - Login", driver.getTitle());
     }
 
-
     /**
-     * Attempts an actual login into Rundeck then validates a link
-     * @throws Exception
+     * Attempts an actual login into Rundeck then validates a link.
+     * @throws Exception in case of any error
      */
     @Test
     public void validateLogin() throws Exception {
         int timeout = 10;
-
         driver.get(SITE_TO_TEST);
 
-        for (int second = 0; ; second++) {
-            if (second >= timeout) fail("timeout");
-            try {
-                if (isElementPresent(By.name("j_username"))) {
-                    break;
-                }
-            } catch (Exception e) {
-            }
-            Thread.sleep(1000);
-        }
+        // Use the username box to consider the page loaded
+        By usernameBox = By.name("j_username");
+        waitForElement(usernameBox);
 
-        driver.findElement(By.name("j_username")).clear();
-        driver.findElement(By.name("j_username")).sendKeys("admin");
+        driver.findElement(usernameBox).clear();
+        driver.findElement(usernameBox).sendKeys("admin");
         driver.findElement(By.name("j_password")).clear();
         driver.findElement(By.name("j_password")).sendKeys("admin");
         driver.findElement(By.className("btn-primary")).click();
 
-        Thread.sleep(1000);
-        assertEquals("Documentation »", driver.findElement(By.linkText("Documentation »")).getText());
+        // Use the new project button to consider the page loaded
+        By newProjectButton = By.partialLinkText("New Project");
+        waitForElement(newProjectButton);
+
+        String newProjectButtonText = driver.findElement(newProjectButton).getText();
+        System.out.println("New project button text: " + newProjectButtonText);
+        // Interestingly the trim only matters for Safari - Win10/IE + Linux/Firefox auto-trim?
+        assertEquals("New Project", newProjectButtonText.trim());
     }
 }
